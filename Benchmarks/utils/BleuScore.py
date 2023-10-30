@@ -1,4 +1,8 @@
 from pycocoevalcap.bleu.bleu import Bleu
+from pycocoevalcap.meteor.meteor import Meteor
+from pycocoevalcap.rouge.rouge import Rouge
+from pycocoevalcap.cider.cider import Cider
+from pycocoevalcap.spice.spice import Spice
 class CocoScorer():
     def __init__(self, ref, gt):
         # param:
@@ -12,8 +16,9 @@ class CocoScorer():
 
         #print('setting up scorers...')
         self.scorers = [
-            (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"])
-            #(Rouge(), "ROUGE_L"),
+            (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
+            (Rouge(), "ROUGE_L")
+            #(Meteor(), "Meteor")
             #(Cider(), "CIDEr")
         ]
 
@@ -30,7 +35,7 @@ class CocoScorer():
                 #print("%s: %0.3f" % (method, score))
                 total_scores[method] = score
 
-        '''print('*****DONE*****')
+        print('*****DONE*****')
         for key, value in total_scores.items():
-            print('{}:{}'.format(key, value))'''
+            print('{}:{}'.format(key, value))
         return total_scores
