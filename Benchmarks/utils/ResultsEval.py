@@ -4,12 +4,23 @@ import fire
 from glob import glob
 from tqdm import tqdm
 
-from summertime.evaluation import Rouge, RougeWe, BertScore, Bleu, Meteor
+# from summertime.evaluation import Rouge, RougeWe, BertScore, Bleu, Meteor
+# from pycocoevalcap.bleu.bleu import Bleu
+# from pycocoevalcap.meteor.meteor import Meteor
+# from pycocoevalcap.rouge.rouge import Rouge
+from rouge import Rouge
+from torchtext.data.metrics import bleu_score
+import bert_score.score as Bert_score
+import nltk
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+from nltk.translate.meteor_score import meteor_score
+from nltk import word_tokenize
+
 from MoverScore import MoverScore
 
-METRICS = [Rouge(), RougeWe(), BertScore(), Bleu(), Meteor()]
-
-
+# METRICS = [Rouge(), RougeWe(), BertScore(), Bleu(), Meteor()]
+# METRICS = [Rouge(), Bleu(), Meteor()]
 
 def load_split_data(fpath):
     """
@@ -20,6 +31,7 @@ def load_split_data(fpath):
     tmp = []
     with open(fpath, 'r') as r:
         for line in r:
+            print(line)
             tmp.append(json.loads(line))
     return tmp
 
@@ -28,19 +40,51 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
         Run all metrics for summarization results
     """
 
-    result = dict()
-    print("evaluating...")
-    for metric in METRICS:
-        print(f"evaluating {metric.metric_name}...")
-        if metric.metric_name in BlockList:
-            continue
-        results = metric.evaluate(model_summaries, tgt)
-        print(f"{metric.metric_name} results: {results}")
-        result[metric.metric_name] = results
-    
+    # print("evaluating...")
+    # for metric in METRICS:
+    #     print(f"evaluating {metric.metric_name}...")
+    #     if metric.metric_name in BlockList:
+    #         continue
+    #     results = metric.evaluate(model_summaries, tgt)
+    #     print(f"{metric.metric_name} results: {results}")
+    #     result[metric.metric_name] = results
+
+    result = {
+        'rouge': [],
+        'bleu': [],
+        'meteor': [],
+        'bertscore': []
+    }
+
+    for target, pred in zip(tgt, model_summaries):
+
+        # rouge score
+        if "rouge" not in BlockList:
+            rouge = Rouge()
+            result['rouge'].append(rouge.get_scores(pred, target)[0])
+            print(f"rouge results: {result['rouge']}")
+        
+        # bleu score
+        if "bleu" not in BlockList:
+            result['bleu'].append(bleu_score([pred], [target]))
+            print(f"bleu results: {result['bleu']}")
+        
+        # meteor score
+        if "meteor" not in BlockList:
+            result['meteor'].append(meteor_score([pred], target))
+            print(f"meteor results: {result['meteor']}")
+
+        # bert score
+        if "bertscore" not in BlockList:
+            P, R, F1 = Bert_score([pred], [target], lang="en", verbose=False)
+            result['bertscore'].append({"precision": P.item(), "recall": R.item(), "f1": F1.item()})
+            print(f"bertscore results: {result['bertscore']}")
+        
     if "moverscore" not in BlockList:
         result['MoverScore'] = MoverScore(model_summaries, tgt)
         print(f"MoverScore results: {result['MoverScore']}")
+    
+    print(result)
     return result
 
 # run evaluation by summertime
