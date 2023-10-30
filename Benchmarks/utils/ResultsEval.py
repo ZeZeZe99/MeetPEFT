@@ -1,6 +1,7 @@
 import os
 import json
 import fire
+import torch
 from glob import glob
 from tqdm import tqdm
 from BleuScore import CocoScorer
@@ -49,12 +50,8 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     #     print(f"{metric.metric_name} results: {results}")
     #     result[metric.metric_name] = results
 
-    result = {
-        'rouge': [],
-        'bleu': [],
-        'meteor': [],
-        'bertscore': []
-    }
+    result = {}
+
     # bleu score
     print(tgt)
     scorer = CocoScorer(tgt, model_summaries)
@@ -62,13 +59,20 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     for i in range(1,len(score["Bleu"])+1):
         result[f"Bleu@{i}"] = score["Bleu"][i-1]
 
-    for target, pred in zip(tgt, model_summaries):
+    # rouge score
+    rouge = Rouge()
+    result['rouge'] = rouge.get_scores(model_summaries, tgt, avg=True)
+    # result['rouge'].append(rouge.get_scores(pred, target)[0])
+    print(f"rouge results: {result['rouge']}")
 
-        # rouge score
-        if "rouge" not in BlockList:
-            rouge = Rouge()
-            result['rouge'].append(rouge.get_scores(pred, target)[0])
-            print(f"rouge results: {result['rouge']}")
+    meteor_scores = []
+    for target, pred in zip(tgt[:5], model_summaries[:5]):
+
+        # # rouge score
+        # if "rouge" not in BlockList:
+        #     rouge = Rouge()
+        #     result['rouge'].append(rouge.get_scores(pred, target)[0])
+        #     print(f"rouge results: {result['rouge']}")
         
         # bleu score
         #if "bleu" not in BlockList:
@@ -78,21 +82,29 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
             # no need to print here
         
         # meteor score
-        if "meteor" not in BlockList:
-            result['meteor'].append(meteor_score([pred], target))
-            print(f"meteor results: {result['meteor']}")
-
-        # bert score
-        if "bertscore" not in BlockList:
-            P, R, F1 = Bert_score([pred], [target], lang="en", verbose=False)
-            result['bertscore'].append({"precision": P.item(), "recall": R.item(), "f1": F1.item()})
-            print(f"bertscore results: {result['bertscore']}")
-        
-    if "moverscore" not in BlockList:
-        result['MoverScore'] = MoverScore(model_summaries, tgt)
-        print(f"MoverScore results: {result['MoverScore']}")
+        meteor_scores.append(meteor_score([pred], target))
+        # print(f"meteor results: {result['meteor']}")
     
-    print(result)
+    avg_meteor = sum(meteor_scores) / len(meteor_scores)
+    result['meteor'] = avg_meteor
+
+    # bert score
+    P, R, F1 = Bert_score(model_summaries, tgt, lang="en", verbose=True)
+    # convert from tensor to list
+    P = torch.mean(P).item()
+    R = torch.mean(R).item()
+    F1 = torch.mean(F1).item()
+    result['bertscore'] = {"P":P, "R":R, "F1":F1}
+    print(f"bertscore results: {result['bertscore']}")
+        
+    result['MoverScore'] = MoverScore(model_summaries, tgt)
+    print(f"MoverScore results: {result['MoverScore']}")
+    
+    # print(result)
+    # write results to file
+    with open("eval_MB.json", "w") as w:
+        json.dump(result, w)
+
     return result
 
 # run evaluation by summertime
@@ -123,7 +135,8 @@ def run_eval(fpath):
     return {data_name: run_evaluation(eval_data['pred'], eval_data['tgt'])}  
 
 if __name__ == "__main__":
-    data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
+    # data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
+    data_path = "/Users/qingyangliu/Desktop/11667/MeetPEFT/Benchmarks/Llama-2-7B/output/output_QM.jsonl"
     run_eval(data_path)
 
     
