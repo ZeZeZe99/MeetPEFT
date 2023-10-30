@@ -102,7 +102,7 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     
     # print(result)
     # write results to file
-    with open("eval_MB.json", "w") as w:
+    with open("eval_GPT_MB.json", "w") as w:
         json.dump(result, w)
 
     return result
@@ -136,7 +136,7 @@ def run_eval(fpath):
 
 if __name__ == "__main__":
     # data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
-    data_path = "/Users/qingyangliu/Desktop/11667/MeetPEFT/Benchmarks/Llama-2-7B/output/output_QM.jsonl"
+    data_path = "/Users/qingyangliu/Desktop/11667/MeetPEFT/Benchmarks/GPT/meetingbank_output.jsonl"
     run_eval(data_path)
 
     
