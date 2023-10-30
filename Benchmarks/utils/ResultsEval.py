@@ -3,7 +3,7 @@ import json
 import fire
 from glob import glob
 from tqdm import tqdm
-
+from BleuScore import CocoScorer
 # from summertime.evaluation import Rouge, RougeWe, BertScore, Bleu, Meteor
 # from pycocoevalcap.bleu.bleu import Bleu
 # from pycocoevalcap.meteor.meteor import Meteor
@@ -55,6 +55,12 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
         'meteor': [],
         'bertscore': []
     }
+    # bleu score
+    print(tgt)
+    scorer = CocoScorer(tgt, model_summaries)
+    score = scorer.compute_scores()
+    for i in range(1,len(score["Bleu"])+1):
+        result[f"Bleu@{i}"] = score["Bleu"][i-1]
 
     for target, pred in zip(tgt, model_summaries):
 
@@ -65,9 +71,11 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
             print(f"rouge results: {result['rouge']}")
         
         # bleu score
-        if "bleu" not in BlockList:
-            result['bleu'].append(bleu_score([pred], [target]))
-            print(f"bleu results: {result['bleu']}")
+        #if "bleu" not in BlockList:
+            #result['bleu'].append(bleu_score(pred, target))
+            #print(f"bleu results: {result['bleu']}")
+            # BleuScore module will handle the printing, 
+            # no need to print here
         
         # meteor score
         if "meteor" not in BlockList:
@@ -115,6 +123,7 @@ def run_eval(fpath):
     return {data_name: run_evaluation(eval_data['pred'], eval_data['tgt'])}  
 
 if __name__ == "__main__":
-    fire.Fire(run_eval)
+    data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
+    run_eval(data_path)
 
     
