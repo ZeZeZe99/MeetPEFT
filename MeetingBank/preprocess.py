@@ -5,7 +5,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 def preprocess():
-    path = 'MeetingBank.nosync/Metadata/MeetingBank.json'
+    path = './Metadata/MeetingBank.json'
     with open(path, 'r') as f:
         data = json.load(f)
     
@@ -43,7 +43,7 @@ def preprocess():
 def split_segment(segment_level):
     groups = ['train', 'validation', 'test']
     for g in groups:
-        with open(f'MeetingBank.nosync/Metadata/Splits/{g}.json', 'r') as f:
+        with open(f'./Metadata/Splits/{g}.json', 'r') as f:
             original_split = [json.loads(line) for line in f]
         segment_split = []
         for instance in original_split:
@@ -52,7 +52,7 @@ def split_segment(segment_level):
                 'summary': segment_level[instance['id']]['summary'],
                 'source': segment_level[instance['id']]['source']
             })
-        with open(f'MeetingBank/{g}_segment.json', 'w') as f:
+        with open(f'./{g}_segment.json', 'w') as f:
             json.dump(segment_split, f, indent=4)
         print(f'{g}: {len(segment_split)}')
 
@@ -69,15 +69,15 @@ def split_meeting(meeting_level):
     validation_split = [meeting_level[meeting_id] for meeting_id in validation_ids]
     test_split = [meeting_level[meeting_id] for meeting_id in test_ids]
 
-    json.dump(train_split, open('MeetingBank/train_meeting.json', 'w'), indent=4)
-    json.dump(validation_split, open('MeetingBank/validation_meeting.json', 'w'), indent=4)
-    json.dump(test_split, open('MeetingBank/test_meeting.json', 'w'), indent=4)
+    json.dump(train_split, open('./train_meeting.json', 'w'), indent=4)
+    json.dump(validation_split, open('./validation_meeting.json', 'w'), indent=4)
+    json.dump(test_split, open('./test_meeting.json', 'w'), indent=4)
 
 def combine_segments(tokenizer, threshold=32000):
     meeting_text = dict()
     meeting_token = dict()
 
-    path = 'MeetingBank.nosync/Metadata/MeetingBank.json'
+    path = './Metadata/MeetingBank.json'
     with open(path, 'r') as f:
         data = json.load(f)
 
@@ -149,12 +149,12 @@ def combine_segments(tokenizer, threshold=32000):
     validation_token = [meeting_token[meeting_id] for meeting_id in validation_ids]
     test_token = [meeting_token[meeting_id] for meeting_id in test_ids]
 
-    json.dump(train_text, open('MeetingBank/train_text.json', 'w'), indent=4)
-    json.dump(validation_text, open('MeetingBank/validation_text.json', 'w'), indent=4)
-    json.dump(test_text, open('MeetingBank/test_text.json', 'w'), indent=4)
-    json.dump(train_token, open('MeetingBank/train_token.json', 'w'), indent=4)
-    json.dump(validation_token, open('MeetingBank/validation_token.json', 'w'), indent=4)
-    json.dump(test_token, open('MeetingBank/test_token.json', 'w'), indent=4)
+    json.dump(train_text, open('./train_text.json', 'w'), indent=4)
+    json.dump(validation_text, open('./validation_text.json', 'w'), indent=4)
+    json.dump(test_text, open('./test_text.json', 'w'), indent=4)
+    json.dump(train_token, open('./train_token.json', 'w'), indent=4)
+    json.dump(validation_token, open('./validation_token.json', 'w'), indent=4)
+    json.dump(test_token, open('./test_token.json', 'w'), indent=4)
 
 
 if __name__ == '__main__':
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # split_meeting(meeting_level)
 
     tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
-    combine_segments()
+    combine_segments(tokenizer)
 
 
 
