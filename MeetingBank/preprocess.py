@@ -191,5 +191,3 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
     combine_segments(tokenizer, threshold=16000)
 
-
-
