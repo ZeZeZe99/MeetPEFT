@@ -189,7 +189,8 @@ def combine_segments(tokenizer, threshold=16000):
 
     print(f'total: {total}, skip: {skip}')
 
-def process_segment(tokenizer, threshold=16000):
+def process_segment(tokenizer, low=0, high=16000):
+    upper = f'{high // 1000}k'
     with open('MeetingBank.json', 'r') as f:
         data = json.load(f)
     
@@ -206,8 +207,7 @@ def process_segment(tokenizer, threshold=16000):
             summary_token = tokenizer.encode(summary)
             item_length = len(source_token) + len(summary_token)
 
-            if item_length > threshold:
-                # print(f'{meeting_id}_{item_id} is too long: {item_length}')
+            if item_length > high or item_length < low:
                 skip += 1
                 continue
             segment[f'{meeting_id}_{item_id}'] = {
@@ -227,7 +227,7 @@ def process_segment(tokenizer, threshold=16000):
             if instance['id'] not in segment:
                 continue
             segment_split.append(segment[instance['id']])
-        with open(f'./{g}_segment.json', 'w') as f:
+        with open(f'./{g}_segment_{upper}.json', 'w') as f:
             json.dump(segment_split, f, indent=4)
         print(f'{g}: {len(segment_split)}')
 
@@ -241,4 +241,4 @@ if __name__ == '__main__':
     # combine_segments(tokenizer, threshold=16000)
 
     tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
-    process_segment(tokenizer, threshold=16000)
+    process_segment(tokenizer, low=16000, high=32000)
