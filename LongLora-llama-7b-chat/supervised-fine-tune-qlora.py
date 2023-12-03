@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 import transformers
 from torch.utils.data import Dataset
-from transformers import Trainer, DataCollatorForLanguageModeling, BitsAndBytesConfig
+from transformers import Trainer, DataCollatorForLanguageModeling, BitsAndBytesConfig, TrainerCallback, TrainerState, TrainerControl
 from llama_attn_replace_sft import replace_llama_attn
 #from gptneox_attn_replace import replace_gpt_neox_attn
 from peft import LoraConfig, get_peft_model
@@ -40,6 +40,7 @@ DEFAULT_PAD_TOKEN = "[PAD]"
 DEFAULT_EOS_TOKEN = "</s>"
 DEFAULT_BOS_TOKEN = "<s>"
 DEFAULT_UNK_TOKEN = "<unk>"
+PREFIX_CHECKPOINT_DIR = "checkpoint"
 
 def _make_r_io_base(f, mode: str):
     if not isinstance(f, io.IOBase):
@@ -115,6 +116,26 @@ class TrainingArguments(transformers.TrainingArguments):
         default="embed,norm",
         metadata={"help": "Additional trainable parameters except LoRA weights, if low rank training."},
     )
+
+class SavePeftModelCallback(TrainerCallback):
+    def on_save(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs,
+    ):
+        checkpoint_folder = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{state.global_step}")
+
+        modules_to_save = ["embed", "norm"]
+        state_dict = kwargs["model"].state_dict()
+        to_save = {}
+        for key, value in state_dict.items():
+            if any(module_name in key for module_name in modules_to_save):
+                to_save[key.replace("base_model.model.", "")] = value
+        torch.save(to_save, os.path.join(checkpoint_folder, "trainable_params.bin"))    
+
+        return control
 
 def smart_tokenizer_and_embedding_resize(
     special_tokens_dict: Dict,
@@ -353,7 +374,7 @@ def train():
     model.enable_input_require_grads()     # required for gradienwangt checkpointing
     model.gradient_checkpointing_enable()  # enable gradient checkpointing
 
-    trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
+    trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module, callbacks=[SavePeftModelCallback])
     trainer.train()
     trainer.save_state()
     trainer.save_model(output_dir=training_args.output_dir)
