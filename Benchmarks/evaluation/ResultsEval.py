@@ -53,7 +53,6 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     result = {}
 
     # bleu score
-    print(tgt)
     scorer = CocoScorer(tgt, model_summaries)
     score = scorer.compute_scores()
     for i in range(1,len(score["Bleu"])+1):
@@ -66,7 +65,7 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     print(f"rouge results: {result['rouge']}")
 
     meteor_scores = []
-    for target, pred in zip(tgt[:5], model_summaries[:5]):
+    for target, pred in zip(tgt, model_summaries):
 
         # # rouge score
         # if "rouge" not in BlockList:
@@ -102,7 +101,7 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     
     # print(result)
     # write results to file
-    with open("eval_GPT_MB.json", "w") as w:
+    with open("Benchmarks/LongAlpaca-7B/evals/eval_MB_text.json", "w") as w:
         json.dump(result, w)
 
     return result
@@ -119,6 +118,8 @@ def get_tgt_pred(temp_data):
         else:
             ids = []
         if "target" in ins.keys():
+            if not ins['target'].strip():
+                continue
             tgt_list.append(ins['target'])
             pred_list.append(ins['prediction'])
         elif "summary" in ins.keys():
@@ -136,7 +137,7 @@ def run_eval(fpath):
 
 if __name__ == "__main__":
     # data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
-    data_path = "/Users/qingyangliu/Desktop/11667/MeetPEFT/Benchmarks/GPT/meetingbank_output.jsonl"
+    data_path = "Benchmarks/LongAlpaca-7B/output/output_MB_text.jsonl"
     run_eval(data_path)
 
     
