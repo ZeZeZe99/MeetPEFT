@@ -94,14 +94,14 @@ def combine_transcript():
     
     json.dump(meetings, open('meetingbank.json', 'w'), indent=4)
 
-
 def combine_segments(tokenizer, threshold=16000):
     meeting_text = dict()
     meeting_token = dict()
 
-    with open('Metadata/MeetingBank.json', 'r') as f:
+    with open('MeetingBank.json', 'r') as f:
         data = json.load(f)
 
+    skip = 0
     for meeting_id in tqdm(data):
         meeting = data[meeting_id]
         count = 0
@@ -111,10 +111,10 @@ def combine_segments(tokenizer, threshold=16000):
         source_tokens = []
         summary_tokens = []
         curr_length = 0
-        for item_id in meeting['itemInfo']:
-            item = meeting['itemInfo'][item_id]
-            summary = f"Item {item_id} summary: {item['Summary']}"
-            source = f'Item {item_id} transcripts:\n'
+
+        for i, (item_id, item) in enumerate(meeting['itemInfo'].items()):
+            summary = f"Item {i} summary: {item['Summary']}\n"
+            source = f'Item {i} transcripts:\n'
             for transcript in item['transcripts']:
                 source += f'speaker {transcript["speaker"]}: {transcript["text"]}\n'
             
@@ -123,7 +123,8 @@ def combine_segments(tokenizer, threshold=16000):
             item_length = len(source_token) + len(summary_token)
 
             if item_length > threshold:
-                print(f'{meeting_id}_{item_id} is too long: {item_length}')
+                # print(f'{meeting_id}_{i} is too long: {item_length}')
+                skip += 1
                 continue
             elif item_length + curr_length <= threshold:
                 source_tokens += source_token
@@ -163,6 +164,7 @@ def combine_segments(tokenizer, threshold=16000):
                 'summary': summary_tokens,
                 'id': f'{meeting_id}_{count}'
             }
+        break
 
     meeting_ids = list(meeting_text.keys())
     total = len(meeting_ids)
@@ -185,6 +187,49 @@ def combine_segments(tokenizer, threshold=16000):
     json.dump(validation_token, open('./validation_token.json', 'w'), indent=4)
     json.dump(test_token, open('./test_token.json', 'w'), indent=4)
 
+    print(f'total: {total}, skip: {skip}')
+
+def process_segment(tokenizer, threshold=16000):
+    with open('MeetingBank.json', 'r') as f:
+        data = json.load(f)
+    
+    segment = dict()
+    skip = 0
+    for meeting_id, meeting in tqdm(data.items()):
+        for item_id, item in meeting['itemInfo'].items():
+            summary = item['Summary']
+            source = ''
+            for transcript in item['transcripts']:
+                source += f'Speaker {transcript["speaker"]}: {transcript["text"]}\n'
+            
+            source_token = tokenizer.encode(source)
+            summary_token = tokenizer.encode(summary)
+            item_length = len(source_token) + len(summary_token)
+
+            if item_length > threshold:
+                # print(f'{meeting_id}_{item_id} is too long: {item_length}')
+                skip += 1
+                continue
+            segment[f'{meeting_id}_{item_id}'] = {
+                'source': source,
+                'summary': summary,
+                'length': item_length,
+                'id': f'{meeting_id}_{item_id}'
+            }
+    print(f'within_range: {len(segment)}, skip: {skip}')
+                    
+    groups = ['train', 'validation', 'test']
+    for g in groups:
+        with open(f'../MeetingBank.nosync/Metadata/Splits/{g}.json', 'r') as f:
+            original_split = [json.loads(line) for line in f]
+        segment_split = []
+        for instance in original_split:
+            if instance['id'] not in segment:
+                continue
+            segment_split.append(segment[instance['id']])
+        with open(f'./{g}_segment.json', 'w') as f:
+            json.dump(segment_split, f, indent=4)
+        print(f'{g}: {len(segment_split)}')
 
 if __name__ == '__main__':
     # segment_level, meeting_level = preprocess()
@@ -192,6 +237,8 @@ if __name__ == '__main__':
     # split_meeting(meeting_level)
     # combine_transcript()
     
-    tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
-    combine_segments(tokenizer, threshold=16000)
+    # tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
+    # combine_segments(tokenizer, threshold=16000)
 
+    tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
+    process_segment(tokenizer, threshold=16000)
