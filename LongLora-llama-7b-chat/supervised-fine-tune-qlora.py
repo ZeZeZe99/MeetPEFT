@@ -33,6 +33,8 @@ from llama_attn_replace_sft import replace_llama_attn
 from peft import LoraConfig, get_peft_model
 from torch.distributed import barrier
 
+os.environ["WANDB_PROJECT"] = "longlora-llama-7b-chat-16k"
+
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
 DEFAULT_EOS_TOKEN = "</s>"
@@ -348,7 +350,7 @@ def train():
         print(k, v, v / total)
 
     model.config.use_cache = False         # required for gradient checkpointing
-    model.enable_input_require_grads()     # required for gradient checkpointing
+    model.enable_input_require_grads()     # required for gradienwangt checkpointing
     model.gradient_checkpointing_enable()  # enable gradient checkpointing
 
     trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
