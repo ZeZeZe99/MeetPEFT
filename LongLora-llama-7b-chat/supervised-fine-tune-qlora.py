@@ -21,6 +21,7 @@ import math
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Sequence
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -167,7 +168,7 @@ def preprocess(
 ) -> Dict:
     """Preprocess the data by tokenizing."""
     examples = [s + t for s, t in zip(sources, targets)]
-    examples_tokenized, sources_tokenized = [_tokenize_fn(strings, tokenizer) for strings in (examples, sources)]
+    examples_tokenized, sources_tokenized = [_tokenize_fn(strings, tokenizer) for strings in tqdm((examples, sources))]
     input_ids = examples_tokenized["input_ids"]
     labels = copy.deepcopy(input_ids)
     for label, source_len in zip(labels, sources_tokenized["input_ids_lens"]):

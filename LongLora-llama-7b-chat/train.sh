@@ -12,13 +12,13 @@ torchrun --nproc_per_node=1 supervised-fine-tune-qlora.py  \
         --gradient_accumulation_steps 1     \
         --evaluation_strategy "no"     \
         --save_strategy "steps"     \
-        --save_steps 100     \
+        --save_steps 300     \
         --save_total_limit 1     \
         --learning_rate 2e-5     \
         --weight_decay 0.0     \
         --warmup_steps 20     \
         --lr_scheduler_type "constant_with_warmup"     \
-        --logging_steps 1     \
-        --deepspeed "ds_configs/stage3.json" \
+        --logging_steps 5     \
+        --deepspeed "ds_configs/stage2.json" \
         --tf32 True \
         --cache_dir ./cache
