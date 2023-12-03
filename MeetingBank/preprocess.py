@@ -2,7 +2,6 @@ import json
 import random
 from transformers import AutoTokenizer
 from tqdm import tqdm
-from collections import defaultdict
 
 
 def preprocess():
@@ -103,7 +102,7 @@ def combine_segments(tokenizer, threshold=16000):
     with open('meetingbank.json', 'r') as f:
         data = json.load(f)
 
-    for meeting_id in data:
+    for meeting_id in tqdm(data):
         meeting = data[meeting_id]
         count = 0
 
@@ -121,44 +120,49 @@ def combine_segments(tokenizer, threshold=16000):
             
             source_token = tokenizer.encode(source)
             summary_token = tokenizer.encode(summary)
-            length = len(source_token) + len(summary_token)
+            item_length = len(source_token) + len(summary_token)
 
-            if length > threshold:
-                print(f'{meeting_id}_{item_id} is too long: {length}')
+            if item_length > threshold:
+                print(f'{meeting_id}_{item_id} is too long: {item_length}')
                 continue
-            elif length + curr_length <= threshold:
+            elif item_length + curr_length <= threshold:
                 source_tokens += source_token
                 summary_tokens += summary_token
                 combined_sources += source
                 combined_summaries += summary
-                curr_length += length
+                curr_length += item_length
             else:
                 meeting_text[f'{meeting_id}_{count}'] = {
                     'source': combined_sources,
                     'summary': combined_summaries,
-                    'source_length': len(source_tokens),
+                    'length': curr_length,
+                    'id': f'{meeting_id}_{count}'
                 }
                 meeting_token[f'{meeting_id}_{count}'] = {
                     'source': source_tokens,
-                    'summary': summary_tokens
+                    'summary': summary_tokens,
+                    'id': f'{meeting_id}_{count}'
                 }
                 
                 combined_sources = source
                 combined_summaries = summary
                 source_tokens = source_token
                 summary_tokens = summary_token
-                curr_length = length
+                curr_length = item_length
                 count += 1
-            
-        meeting_text[f'{meeting_id}_{count}'] = {
-            'source': combined_sources,
-            'summary': combined_summaries,
-            'source_length': len(source_tokens)
-        }
-        meeting_token[f'{meeting_id}_{count}'] = {
-            'source': source_tokens,
-            'summary': summary_tokens
-        }
+        
+        if curr_length > 0:
+            meeting_text[f'{meeting_id}_{count}'] = {
+                'source': combined_sources,
+                'summary': combined_summaries,
+                'length': curr_length,
+                'id': f'{meeting_id}_{count}'
+            }
+            meeting_token[f'{meeting_id}_{count}'] = {
+                'source': source_tokens,
+                'summary': summary_tokens,
+                'id': f'{meeting_id}_{count}'
+            }
 
     meeting_ids = list(meeting_text.keys())
     total = len(meeting_ids)
@@ -190,6 +194,4 @@ if __name__ == '__main__':
     
     tokenizer = AutoTokenizer.from_pretrained("Yukang/LongAlpaca-7B")
     combine_segments(tokenizer, threshold=16000)
-
-
 
