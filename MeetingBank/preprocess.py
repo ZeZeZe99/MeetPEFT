@@ -100,7 +100,7 @@ def combine_segments(tokenizer, threshold=16000):
     meeting_text = dict()
     meeting_token = dict()
 
-    with open('meetingbank.json', 'r') as f:
+    with open('Metadata/MeetingBank.json', 'r') as f:
         data = json.load(f)
 
     for meeting_id in data:
