@@ -101,7 +101,8 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     
     # print(result)
     # write results to file
-    with open("Benchmarks/LongAlpaca-7B/evals/eval_MB_text.json", "w") as w:
+    file_path = "Benchmarks/LongAlpaca-7B/evals/eval_QM_16k.json"
+    with open(file_path, "w") as w:
         json.dump(result, w)
 
     return result
@@ -120,6 +121,8 @@ def get_tgt_pred(temp_data):
         if "target" in ins.keys():
             if not ins['target'].strip():
                 continue
+            elif not ins['prediction'].strip():
+                continue
             tgt_list.append(ins['target'])
             pred_list.append(ins['prediction'])
         elif "summary" in ins.keys():
@@ -136,8 +139,9 @@ def run_eval(fpath):
     return {data_name: run_evaluation(eval_data['pred'], eval_data['tgt'])}  
 
 if __name__ == "__main__":
-    # data_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/Benchmarks/GPT/output.json"
-    data_path = "Benchmarks/LongAlpaca-7B/output/output_MB_text.jsonl"
+    # data_path = "Benchmarks/LongAlpaca-7B/output/output_MB_segment_16k_100.jsonl"
+    # data_path = "Benchmarks/Llama-2-7B/output/output_MB_2k_2.jsonl"
+    data_path = "Benchmarks/LongAlpaca-7B/output/output_QM_16k.jsonl"
     run_eval(data_path)
 
     
