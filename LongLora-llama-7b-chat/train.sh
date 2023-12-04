@@ -1,20 +1,20 @@
 torchrun --nproc_per_node=1 supervised-fine-tune-qlora.py  \
-        --model_name_or_path daryl149/llama-2-7b-chat-hf \
+        --model_name_or_path merged/only-mb-16k \
         --bf16 True \
-        --output_dir ./checkpoints-16k       \
+        --output_dir ./checkpoints-continue-qm       \
         --model_max_length 16384 \
         --use_flash_attn True \
-        --data_path ./data/mb/train_segment_16k_lora.json \
+        --data_path ./data/qm/train_16k_lora.json \
         --low_rank_training True \
-        --num_train_epochs 3  \
+        --num_train_epochs 1  \
         --per_device_train_batch_size 1     \
         --per_device_eval_batch_size 1     \
         --gradient_accumulation_steps 1     \
         --evaluation_strategy "no"     \
         --save_strategy "steps"     \
-        --save_steps 100     \
+        --save_steps 10     \
         --save_total_limit 1     \
-        --learning_rate 2e-5     \
+        --learning_rate 1e-5     \
         --weight_decay 0.0     \
         --warmup_steps 20     \
         --lr_scheduler_type "constant_with_warmup"     \
