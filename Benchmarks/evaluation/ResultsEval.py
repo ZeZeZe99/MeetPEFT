@@ -101,7 +101,7 @@ def run_evaluation(model_summaries, tgt, BlockList=[]):
     
     # print(result)
     # write results to file
-    file_path = "Benchmarks/Llama-2-7B/evals/eval_MB_2k.json"
+    file_path = "Benchmarks/LongAlpaca-7B/evals/eval_QM_16k.json"
     with open(file_path, "w") as w:
         json.dump(result, w)
 
@@ -140,7 +140,8 @@ def run_eval(fpath):
 
 if __name__ == "__main__":
     # data_path = "Benchmarks/LongAlpaca-7B/output/output_MB_segment_16k_100.jsonl"
-    data_path = "Benchmarks/Llama-2-7B/output/output_MB_2k_2.jsonl"
+    # data_path = "Benchmarks/Llama-2-7B/output/output_MB_2k_2.jsonl"
+    data_path = "Benchmarks/LongAlpaca-7B/output/output_QM_16k.jsonl"
     run_eval(data_path)
 
     
