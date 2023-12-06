@@ -1095,7 +1095,8 @@ class UnlimiformerLLaMa(Unlimiformer[LlamaModel]):
         k_proj_rotated = torch.cat([-k_proj_l, k_proj_r], dim=-2)
 
         datastore_query = query.unsqueeze(-2) # (batch * beam, num_heads, 1, attn_dim)
-        datastore_query = torch.matmul(datastore_query, k_proj + k_proj_rotated) # (batch * beam, num_heads, 1, embed_dim)
+        temp = k_proj + k_proj_rotated
+        datastore_query = torch.matmul(datastore_query, temp.half()) # (batch * beam, num_heads, 1, embed_dim)
         datastore_query = datastore_query.squeeze(-2)  # (batch * beam, num_heads, embed_dim)
         return datastore_query
 
@@ -1110,8 +1111,8 @@ class UnlimiformerLLaMa(Unlimiformer[LlamaModel]):
         if v_proj_layer.bias is not None:
             v_bias = v_proj_layer.bias.view(1, self.num_heads, embed_dim // self.num_heads).unsqueeze(-2).unsqueeze(0)
         # new_keys, new_values: (batch, beam, head, encoder_len, attn_dim)
-        retrieved_keys = torch.matmul(embeddings, k_weight) + k_bias # (beam, head, encoder_len, embed_dim)
-        retrieved_values = torch.matmul(embeddings, v_weight) + v_bias # (beam, head, encoder_len, embed_dim)
+        retrieved_keys = torch.matmul(embeddings, k_weight.half()) + k_bias # (beam, head, encoder_len, embed_dim)
+        retrieved_values = torch.matmul(embeddings, v_weight.half()) + v_bias # (beam, head, encoder_len, embed_dim)
 
         attention = self.model.base_model.layers[-1].self_attn
         cos, sin = attention.rotary_emb(retrieved_values, seq_len=self.hidden_states[0].shape[1])

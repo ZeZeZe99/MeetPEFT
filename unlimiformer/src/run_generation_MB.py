@@ -443,11 +443,11 @@ def main():
     model_kwargs = {}
     if args.num_hidden_layers is not None:
         model_kwargs["num_hidden_layers"] = args.num_hidden_layers
-    model = model_class.from_pretrained(args.model_name_or_path, **model_kwargs)
+    model = model_class.from_pretrained(args.model_name_or_path,load_in_8bit=True, **model_kwargs)
 
-    if args.fp16:
+    '''if args.fp16:
         model.half()
-    model.to(args.device)
+    model.to(args.device)'''
 
     max_seq_length = getattr(model.config, "max_position_embeddings", 0)
     args.length = adjust_length_to_model(args.length, max_sequence_length=max_seq_length)
@@ -479,7 +479,7 @@ def main():
 
     prompt_text = args.prompt if args.prompt else input("Model prompt >>> ")
     # Check if prompt_text is a valid file name:
-    fpath = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/MeetingBank/test_segment_16k_sample_100.json"
+    fpath = "/content/MeetPEFT/MeetingBank/test_segment_16k_sample_100.json"
     with open(fpath, 'r') as r:
         val_data = json.loads(r.read())
     len(val_data)
