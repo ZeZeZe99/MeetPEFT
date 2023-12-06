@@ -460,7 +460,7 @@ def main():
             'unlimiformer_head_num': unlimiformer_args.unlimiformer_head_num, 
             'exclude_attention': unlimiformer_args.unlimiformer_exclude, 
             'chunk_overlap': unlimiformer_args.unlimiformer_chunk_overlap,
-            'model_encoder_max_len': unlimiformer_args.unlimiformer_chunk_size,
+            'model_encoder_max_len': 4096,
             'verbose': unlimiformer_args.unlimiformer_verbose, 'tokenizer': tokenizer,
             'unlimiformer_training': unlimiformer_args.unlimiformer_training,
             'use_datastore': unlimiformer_args.use_datastore,
@@ -483,7 +483,7 @@ def main():
     with open(fpath, 'r') as r:
         val_data = json.loads(r.read())
     len(val_data)
-    with open("output.json", "w") as json_file:
+    with open("/content/drive/MyDrive/output_unlimi_llama_MB.json", "w") as json_file:
         for sample in tqdm(val_data):
             sample_result = dict()
             prompt_text = sample['source']
