@@ -443,11 +443,11 @@ def main():
     model_kwargs = {}
     if args.num_hidden_layers is not None:
         model_kwargs["num_hidden_layers"] = args.num_hidden_layers
-    model = model_class.from_pretrained(args.model_name_or_path, **model_kwargs)
+    model = model_class.from_pretrained(args.model_name_or_path,load_in_8bit=True, **model_kwargs)
 
-    if args.fp16:
+    '''if args.fp16:
         model.half()
-    model.to(args.device)
+    model.to(args.device)'''
 
     max_seq_length = getattr(model.config, "max_position_embeddings", 0)
     args.length = adjust_length_to_model(args.length, max_sequence_length=max_seq_length)
@@ -460,7 +460,7 @@ def main():
             'unlimiformer_head_num': unlimiformer_args.unlimiformer_head_num, 
             'exclude_attention': unlimiformer_args.unlimiformer_exclude, 
             'chunk_overlap': unlimiformer_args.unlimiformer_chunk_overlap,
-            'model_encoder_max_len': unlimiformer_args.unlimiformer_chunk_size,
+            'model_encoder_max_len': 4096,
             'verbose': unlimiformer_args.unlimiformer_verbose, 'tokenizer': tokenizer,
             'unlimiformer_training': unlimiformer_args.unlimiformer_training,
             'use_datastore': unlimiformer_args.use_datastore,
@@ -479,11 +479,11 @@ def main():
 
     prompt_text = args.prompt if args.prompt else input("Model prompt >>> ")
     # Check if prompt_text is a valid file name:
-    QM_path = "/Users/zhuzengliang/Documents/GitHub/MeetPEFT/QMSum/meetpeft/test_16k.json"
+    QM_path = "/content/MeetPEFT/QMSum/meetpeft/test_16k.json"
     with open(QM_path, 'r', encoding="utf-8") as f:
         val_data = json.load(f)
     len(val_data)
-    with open("output.json", "w") as json_file:
+    with open("/content/drive/MyDrive/output_unlimi_llama_qusum.json", "w") as json_file:
         for sample in tqdm(val_data):
             sample_result = dict()
             prompt_text = sample['conversations']
